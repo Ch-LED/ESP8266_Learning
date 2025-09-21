@@ -2,15 +2,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>f9d7a164-fe3a-4b05-9066-d54eeb7513f8</ProjectGuid>
+    <ProjectGuid>1233ab81-5cd2-4833-ae0f-7c8d72a03a3e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>WebSocket_Practice.py</StartupFile>
+    <StartupFile>WebSocket_Server.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>WebSocket_Practice</Name>
-    <RootNamespace>WebSocket_Practice</RootNamespace>
+    <Name>WebSocket_Server</Name>
+    <RootNamespace>WebSocket_Server</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="WebSocket_Practice.py" />
+    <Compile Include="WebSocket_Server.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -8,10 +8,10 @@
         {
             "name": "PlatformIO",
             "includePath": [
-                "E:/ESP_Projects/Sample/include",
-                "E:/ESP_Projects/Sample/src",
-                "E:/ESP_Projects/Sample/.pio/libdeps/esp12e/ArduinoJson/src",
-                "E:/ESP_Projects/Sample/.pio/libdeps/esp12e/WebSockets/src",
+                "E:/ESP8266/ESP8266_Learning/ESP8266/include",
+                "E:/ESP8266/ESP8266_Learning/ESP8266/src",
+                "E:/ESP8266/ESP8266_Learning/ESP8266/.pio/libdeps/esp12e/ArduinoJson/src",
+                "E:/ESP8266/ESP8266_Learning/ESP8266/.pio/libdeps/esp12e/WebSockets/src",
                 "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/Ethernet/src",
                 "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/SPI",
                 "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266WiFi/src",
@@ -59,10 +59,10 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
-                    "E:/ESP_Projects/Sample/include",
-                    "E:/ESP_Projects/Sample/src",
-                    "E:/ESP_Projects/Sample/.pio/libdeps/esp12e/ArduinoJson/src",
-                    "E:/ESP_Projects/Sample/.pio/libdeps/esp12e/WebSockets/src",
+                    "E:/ESP8266/ESP8266_Learning/ESP8266/include",
+                    "E:/ESP8266/ESP8266_Learning/ESP8266/src",
+                    "E:/ESP8266/ESP8266_Learning/ESP8266/.pio/libdeps/esp12e/ArduinoJson/src",
+                    "E:/ESP8266/ESP8266_Learning/ESP8266/.pio/libdeps/esp12e/WebSockets/src",
                     "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/Ethernet/src",
                     "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/SPI",
                     "C:/Users/chens/.platformio/packages/framework-arduinoespressif8266/libraries/ESP8266WiFi/src",
