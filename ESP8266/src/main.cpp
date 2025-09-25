@@ -1,28 +1,38 @@
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <WebSocketsClient.h>
-#include <ArduinoJson.h>
-#include <esp8266_peri.h>
+# include <Arduino.h>
+# include <ESP8266WiFi.h>
+# include <WebSocketsClient.h>
+# include <ArduinoJson.h>
+# include <esp8266_peri.h>
+# include <ModuleManager/ModuleManager.h>
+# include <EventBus/EventBus.h>
 
 const char* ssid     = "荣耀Magic6";
 const char* password = "p0o9i8u7";
 
 WebSocketsClient webSocket;
 
+ModuleManager moduleManager;
+
 unsigned long startTime = 0;
 
 bool shouldReboot = false;
 unsigned long rebootTime = 0;
 
-void mockSensorResponse() {
-    float mockTemperature = 25.0 + random(-500, 500) / 100.0; // Random temp between 20.0 and 30.0
-    float mockHumidity = 50.0 + random(-2000, 2000) / 100.0;   // Random humidity between 30.0 and 70.0
+bool led_breath = false;
 
-    DynamicJsonDocument doc(256);
+void mockSensorResponse() {
+    float mockTemperature = 25.0 + random(-500, 500) / 100.0;
+    float mockHumidity = 50.0 + random(-2000, 2000) / 100.0;
+
+    DynamicJsonDocument doc(512);
     doc["type"] = "mock_sensor_response";
-    doc["content"]["temperature"] = mockTemperature;
-    doc["content"]["humidity"] = mockHumidity;
+    doc["content"] = "Mock sensor data retrieved";
     doc["timestamp"] = (millis() - startTime) / 1000.0;
+    
+    JsonObject data = doc.createNestedObject("data");
+    data["status"] = "ok";
+    data["temperature"] = mockTemperature;
+    data["humidity"] = mockHumidity;
 
     String response;
     serializeJson(doc, response);
@@ -44,35 +54,16 @@ void rebootResponse() {
     shouldReboot = true;
     rebootTime = millis() + 1000;
 
-    DynamicJsonDocument doc(128);
+    DynamicJsonDocument doc(256);
     doc["type"] = "command_response";
-    doc["content"]["status"] = "ok";
-    doc["content"]["message"] = "Reboot scheduled.";
+    doc["content"] = "Reboot scheduled.";
+    doc["data"]["status"] = "ok";
     doc["timestamp"] = (millis() - startTime) / 1000.0;
+
     String response;
     serializeJson(doc, response);
     webSocket.sendTXT(response);
-
     Serial.println("[CMD] Reboot scheduled from command.");
-}
-
-void ledResponse(const char* state) {
-    if (strcmp(state, "on") == 0) {
-        digitalWrite(LED_BUILTIN, LOW);
-    } else {
-        digitalWrite(LED_BUILTIN, HIGH);
-    }
-
-    DynamicJsonDocument doc(128);
-    doc["type"] = "command_response";
-    doc["content"]["status"] = "ok";
-    doc["content"]["message"] = String("LED turned ") + state + ".";
-    doc["timestamp"] = (millis() - startTime) / 1000.0;
-    String response;
-    serializeJson(doc, response);
-    webSocket.sendTXT(response);
-
-    Serial.printf("[CMD] LED turned %s from command.\n", state);
 }
 
 String getDeviceInfo() {
@@ -122,10 +113,14 @@ String getDeviceInfo() {
 void infoResponse() {
     String info = getDeviceInfo();
 
-    DynamicJsonDocument doc(128);
+    DynamicJsonDocument doc(512);
     doc["type"] = "info_response";
-    doc["content"] = info;
+    doc["content"] = "Device information retrieved";
     doc["timestamp"] = (millis() - startTime) / 1000.0;
+    
+    JsonObject data = doc.createNestedObject("data");
+    data["status"] = "ok";
+    data["info"] = info;
 
     String response;
     serializeJson(doc, response);
@@ -189,7 +184,25 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
       }
 
       const char* msg_type = doc["type"];
+      DynamicJsonDocument mainDoc(1024);
+      JsonObject mainObj = mainDoc.to<JsonObject>();
 
+      mainDoc["data"] = doc["data"];
+      JsonObject responsePart = mainDoc.createNestedObject("response");
+
+      if (strcmp(msg_type, "command") == 0) {
+        const char* command = doc["content"];
+        if (ModuleManager::handleCommand(command, static_cast<void*>(&mainObj))) {
+            responsePart["type"] = String(command) + "_response";
+            responsePart["timestamp"] = (millis() - startTime) / 1000.0;
+            String response;
+            serializeJson(responsePart, response);
+            webSocket.sendTXT(response);
+            Serial.println("[CMD] Message sent: " + response);
+            Serial.printf("[CMD] Handled by module: %s\n", command);
+            break;
+        }
+      }
       if (strcmp(msg_type, "ping") == 0) {
         const char* id = doc["id"];
         float ping_timestamp = doc["ping_timestamp"];
@@ -210,18 +223,15 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         else if (strcmp(command, "reboot") == 0) {
           rebootResponse();
         }
-        else if (strcmp(command, "set led") == 0) {
-          JsonArray state = doc["data"]["arguments"];
-          ledResponse(state[0] == "on" ? "on" : "off");
-        }
         else if (strcmp(command, "get mock_sensor") == 0) {
           mockSensorResponse();
         }
         else {
           DynamicJsonDocument respDoc(256);
           respDoc["type"] = "command_response";
-          respDoc["content"]["status"] = "error";
-          respDoc["content"]["message"] = "Unknown command.";
+          respDoc["content"] = "Unknown command";
+          JsonObject data = respDoc.createNestedObject("data");
+          data["status"] = "error";
           respDoc["timestamp"] = (millis() - startTime) / 1000.0;
           String response;
           serializeJson(respDoc, response);
@@ -234,6 +244,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 void setup() {
   Serial.begin(115200);
+  delay(100);
+  Serial.println();
+  Serial.println("=== System Startup ===");
+
+  Serial.printf("Modules registered: %d\n", ModuleManager::getModuleCount());
+  ModuleManager::initAllModules();
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -251,6 +267,7 @@ void setup() {
 
 void loop() {
   webSocket.loop();
+  ModuleManager::updateAllModules();
   if (shouldReboot && millis() >= rebootTime) {
       safeReboot();
   }

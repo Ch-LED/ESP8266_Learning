@@ -140,8 +140,9 @@ async def handle_pong_received(data):
 async def handle_message_received(data):
     msg_type = data["type"]
     content = data["content"]
+    data_content = data["data"]
     timestamp = data["timestamp"]
-    message = f"[MESSAGE] Type: {msg_type}, Content: {content}, Timestamp: {timestamp}"
+    message = f"[MESSAGE] Type: {msg_type}, Content: {content}, Data: {data_content}, Timestamp: {timestamp}"
 
     await enqueue_output(message)
 
@@ -183,8 +184,8 @@ async def event_handler(websocket):
     try:
         while True:
             op = await ainput("[>] ")
-            command = op.split(" -")[0]
-            data = op.split(" -")[1:] if " -" in op else ""
+            command = op.split(" ")[0]
+            data = op.split(" ")[1:] if " " in op else ""
 
             if command.lower() in {"exit", "quit"}:
                 await enqueue_output("Exiting...")
